@@ -5,15 +5,16 @@ from symphony.manager.manager import AudioManager
 from symphony.model.loss.loss import mse_with_positive_pressure
 from symphony.model.model import MyModel
 from symphony.model.generate import predict_next_note
-from symphony.preproccesing.preprocessing import midi_to_notes
+from symphony.preproccesing.preprocessing import midi_to_notes, notes_to_midi
 import matplotlib.pyplot as plt
 import glob
 import pandas as pd
 
 num_files = 5
+
 all_notes = []
 
-data_dir = '/Users/juan-garassino/Code/le-wagon/symphony/data/maestro-v2.0.0'
+data_dir = '/Users/juan-garassino/Code/le-wagon/symphony/data/maestro-v2.0.0' # CHANGE THIS
 
 filenames = glob.glob(str(f'{data_dir}/**/*.mid*'))
 
@@ -144,3 +145,11 @@ for _ in range(num_predictions):
 
 generated_notes = pd.DataFrame(
     generated_notes, columns=(*key_order, 'start', 'end'))
+
+# instrument_name = pretty_midi.program_to_instrument_name(instrument.program)
+
+instrument_name = 'Acoustic Grand Piano'
+
+out_file = 'output.mid'
+out_pm = notes_to_midi(generated_notes, out_file=out_file, instrument_name=instrument_name)
+AudioManager.display_audio(out_pm)

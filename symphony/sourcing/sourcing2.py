@@ -1,18 +1,25 @@
-import pathlib
-import tensorflow as tf
+import argparse
 import glob
-import pandas as pd
 import numpy as np
-import tensorflow as tf
-import pretty_midi
+import pandas as pd
 import pathlib
-from symphony.preproccesing.preprocessing import midi_to_notes
+import tensorflow as tf
+from symphony.preproccesing.preprocessing import midi_to_notes, notes_to_midi
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Download and process the maestro dataset")
+    parser.add_argument("--colab", action='store_true', help="Use Colab data directory")
+    parser.add_argument("--local", action='store_true', help="Use local data directory")
+    parser.add_argument("--num_files", type=int, default=5, help="Number of MIDI files to use for training")
+    parser.add_argument("--seq_length", type=int, default=100, help="Sequence length")
+    parser.add_argument("--vocab_size", type=int, default=128, help="Vocabulary size")
+    return parser.parse_args()
 
 def download_maestro_dataset(colab=False):
     if colab:
-        data_dir = pathlib.Path('/content/drive/MyDrive/Colab/data/maestro-v2.0.0')  # Change this for your Colab directory
+        data_dir = pathlib.Path('/content/drive/MyDrive/Colab/data/maestro-v2.0.0')
     else:
-        data_dir = pathlib.Path.home() / "../data/maestro-v2.0.0"  # Assumes a local directory within the user's home directory
+        data_dir = pathlib.Path.home() / "data/maestro-v2.0.0"
 
     if not data_dir.exists():
         tf.keras.utils.get_file(
@@ -21,15 +28,12 @@ def download_maestro_dataset(colab=False):
             extract=True,
             cache_dir='.', cache_subdir='data',
         )
-        print(f'downloaded maestro-v2.0.0-midi.zip and extracted it to data directory. @ {data_dir}')
     else:
         print("Data directory already exists.")
 
 def load_midi_files(data_dir, num_files):
     directory = str(f'{data_dir}/**/*.mid*')
-    print(dir)
     filenames = glob.glob(directory)
-    print('Number of files:', len(filenames))
 
     all_notes = []
     for f in filenames[:num_files]:
@@ -37,10 +41,6 @@ def load_midi_files(data_dir, num_files):
         all_notes.append(notes)
 
     all_notes = pd.concat(all_notes)
-
-    n_notes = len(all_notes)
-    print('Number of notes parsed:', n_notes)
-
     key_order = ['pitch', 'step', 'duration']
     train_notes = np.stack([all_notes[key] for key in key_order], axis=1)
 
@@ -52,19 +52,14 @@ def create_sequences(dataset: tf.data.Dataset, seq_length: int, vocab_size=128) 
 
     key_order = ['pitch', 'step', 'duration']
 
-    # Take 1 extra for the labels
     windows = dataset.window(seq_length, shift=1, stride=1, drop_remainder=True)
-
-    # `flat_map` flattens the" dataset of datasets" into a dataset of tensors
     flatten = lambda x: x.batch(seq_length, drop_remainder=True)
     sequences = windows.flat_map(flatten)
 
-    # Normalize note pitch
     def scale_pitch(x):
         x = x / [vocab_size, 1.0, 1.0]
         return x
 
-    # Split the labels
     def split_labels(sequences):
         inputs = sequences[:-1]
         labels_dense = sequences[-1]
@@ -76,17 +71,23 @@ def create_sequences(dataset: tf.data.Dataset, seq_length: int, vocab_size=128) 
 
 
 if __name__ == "__main__":
+    args = parse_arguments()
 
-    data_dir = '../../data/maestro-v2.0.0'
+    if args.colab and args.local:
+        raise ValueError("Please specify only one data source.")
 
-    download_maestro_dataset(data_dir)
+    if args.colab:
+        data_dir = '/content/drive/MyDrive/Colab/data/maestro-v2.0.0'
+    elif args.local:
+        data_dir = '/Users/juan-garassino/Code/le-wagon/symphony/data/maestro-v2.0.0'
+    else:
+        raise ValueError("Please specify a data source.")
 
-    data_dir = '/Users/juan-garassino/Code/le-wagon/symphony/data/maestro-v2.0.0' # CHANGE THIS
+    download_maestro_dataset(args.colab)
 
-    # Example usage:
-    num_files = 5
-    seq_length = 100
-    vocab_size = 128
+    num_files = args.num_files
+    seq_length = args.seq_length
+    vocab_size = args.vocab_size
 
     dataset = load_midi_files(data_dir, num_files)
     sequence_dataset = create_sequences(dataset, seq_length, vocab_size)
