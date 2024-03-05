@@ -17,7 +17,7 @@ def parse_arguments():
 
 def download_maestro_dataset(colab=False):
     if colab:
-        data_dir = pathlib.Path('/content/drive/MyDrive/Colab/data/maestro-v2.0.0')
+        data_dir = pathlib.Path('/content/symphony/data/maestro-v2.0.0')
     else:
         data_dir = pathlib.Path.home() / "data/maestro-v2.0.0"
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
         raise ValueError("Please specify only one data source.")
 
     if args.colab:
-        data_dir = '/content/drive/MyDrive/Colab/data/maestro-v2.0.0'
+        data_dir = '/content/symphony/data/maestro-v2.0.0'
     elif args.local:
         data_dir = '/Users/juan-garassino/Code/le-wagon/symphony/data/maestro-v2.0.0'
     else:
