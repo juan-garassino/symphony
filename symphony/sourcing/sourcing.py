@@ -10,7 +10,7 @@ from symphony.preproccesing.preprocessing import midi_to_notes
 
 def download_maestro_dataset(colab=False):
     if colab:
-        data_dir = pathlib.Path('/content/drive/MyDrive/Colab/data/maestro-v2.0.0')  # Change this for your Colab directory
+        data_dir = pathlib.Path('/content/symphony/data/maestro-v2.0.0')  # Change this for your Colab directory
     else:
         data_dir = pathlib.Path.home() / "../data/maestro-v2.0.0"  # Assumes a local directory within the user's home directory
 
@@ -46,7 +46,9 @@ def load_midi_files(data_dir, num_files):
 
     return tf.data.Dataset.from_tensor_slices(train_notes)
 
-def create_sequences(dataset: tf.data.Dataset, seq_length: int, vocab_size=128) -> tf.data.Dataset:
+import tensorflow as tf
+
+def create_sequences(dataset: tf.data.Dataset, seq_length: int, num_samples: int, vocab_size=128) -> tf.data.Dataset:
     """Returns TF Dataset of sequence and label examples."""
     seq_length = seq_length + 1
 
@@ -72,7 +74,8 @@ def create_sequences(dataset: tf.data.Dataset, seq_length: int, vocab_size=128) 
 
         return scale_pitch(inputs), labels
 
-    return sequences.map(split_labels, num_parallel_calls=tf.data.AUTOTUNE)
+    return sequences.take(num_samples).map(split_labels, num_parallel_calls=tf.data.AUTOTUNE)
+
 
 
 if __name__ == "__main__":
@@ -81,7 +84,7 @@ if __name__ == "__main__":
 
     download_maestro_dataset(data_dir)
 
-    data_dir = '/Users/juan-garassino/Code/le-wagon/symphony/data/maestro-v2.0.0' # CHANGE THIS
+    data_dir = '/content/symphony/data/maestro-v2.0.0' # CHANGE THIS
 
     # Example usage:
     num_files = 5

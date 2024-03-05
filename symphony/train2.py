@@ -8,8 +8,9 @@ from tensorflow.keras import layers, Model
 import pathlib
 from symphony.model.loss.loss import mse_with_positive_pressure
 from symphony.model.generate import predict_next_note
-from symphony.sourcing.sourcing import load_midi_files, create_sequences
+from symphony.sourcing.sourcing2 import load_midi_files, create_sequences
 from symphony.preproccesing.preprocessing import midi_to_notes, notes_to_midi
+from symphony.manager.manager import AudioManager
 
 
 def parse_arguments():
@@ -22,7 +23,7 @@ def parse_arguments():
                         help="Sequence length")
     parser.add_argument("--vocab_size", type=int, default=128,
                         help="Vocabulary size")
-    parser.add_argument("--epochs", type=int, default=50,
+    parser.add_argument("--epochs", type=int, default=3,
                         help="Number of epochs")
     parser.add_argument("--batch_size", type=int, default=64,
                         help="Batch size")
@@ -43,26 +44,31 @@ def main():
     print(args.data_dir, args.num_files)
 
     #filenames = load_midi_files(args.data_dir, args.num_files)
-    filenames = glob.glob(str(f'{args.data_dir}/**/*.mid*'))
+    filenames = glob.glob(str(f'{args.data_dir}/**/*.mid*'))[:10]
 
     all_notes = []
     key_order = ['pitch', 'step', 'duration']
 
     # print(filenames)
 
-    for f in filenames:
-        # print(f)
+    for i, f in enumerate(filenames):
+        print(f'{i} @ {f}', end='\r')
         notes = midi_to_notes(f)
         all_notes.append(notes)
 
     all_notes = pd.concat(all_notes)
+
+    print('all_notes', all_notes)
+
     n_notes = len(all_notes)
 
     train_notes = np.stack([all_notes[key] for key in key_order], axis=1)
 
     notes_ds = tf.data.Dataset.from_tensor_slices(train_notes)
 
-    seq_ds = create_sequences(notes_ds, args.seq_length, args.vocab_size)
+    print('notes_ds', notes_ds)
+
+    seq_ds = create_sequences(notes_ds, args.seq_length , args.vocab_size)
 
     buffer_size = n_notes - args.seq_length
 
@@ -111,6 +117,7 @@ def main():
     model.summary()
 
     losses = model.evaluate(train_ds, return_dict=True)
+
     print(losses)
 
     model.compile(
@@ -163,8 +170,17 @@ def main():
     instrument_name = 'Acoustic Grand Piano'
 
     out_file = 'output.mid'
-    # out_pm = notes_to_midi(generated_notes, out_file=out_file, instrument_name=instrument_name)
-    # AudioManager.display_audio(out_pm)
 
-if __name__ == "__main__":
-    main()
+    out_pm = notes_to_midi(generated_notes, out_file=out_file, instrument_name=instrument_name)
+
+    AudioManager.display_audio(out_pm)
+
+if __name__ == '__main__':
+    try:
+        main()
+    except:
+        import ipdb, traceback, sys
+
+        extype, value, tb = sys.exc_info()
+        traceback.print_exc()
+        ipdb.post_mortem(tb)

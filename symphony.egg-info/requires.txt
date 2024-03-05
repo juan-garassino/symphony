@@ -4,3 +4,5 @@ numpy
 seaborn
 matplotlib
 tensorflow
+pretty_midi
+pyfluidsynth
