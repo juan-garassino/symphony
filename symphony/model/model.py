@@ -1,5 +1,8 @@
 import tensorflow as tf
 
+from symphony.model.loss.loss import mse_with_positive_pressure
+
+
 class MyModel:
     def __init__(self, input_shape, seq_length, learning_rate=0.005):
         self.input_shape = input_shape
@@ -33,11 +36,6 @@ class MyModel:
 
     def get_summary(self, model):
         return model.summary()
-
-
-# Custom loss function for positive pressure
-def mse_with_positive_pressure(y_true, y_pred):
-    return tf.reduce_mean(tf.square(tf.maximum(0.0, y_pred - y_true)))
 
 
 # Example usage:

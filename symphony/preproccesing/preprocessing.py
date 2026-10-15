@@ -1,11 +1,15 @@
-import pandas as pd
-import numpy as np
 import collections
-import pretty_midi
 import glob
+
+import numpy as np
+import pandas as pd
+import pretty_midi
+
 
 def midi_to_notes(midi_file: str) -> pd.DataFrame:
     pm = pretty_midi.PrettyMIDI(midi_file)
+    if not pm.instruments or not pm.instruments[0].notes:
+        raise ValueError(f'No notes found in first instrument of {midi_file}')
     instrument = pm.instruments[0]
     notes = collections.defaultdict(list)
 

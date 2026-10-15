@@ -1,7 +1,6 @@
 
 # setup.py
-from setuptools import setup
-from setuptools import find_packages
+from setuptools import find_packages, setup
 
 # list dependencies from file
 with open('requirements.txt') as f:
@@ -10,5 +9,5 @@ requirements = [x.strip() for x in content]
 
 setup(name='symphony',
       description="package description",
-      packages=find_packages(), # NEW: find packages automatically
+      packages=find_packages(exclude=["tests"]), # NEW: find packages automatically
       install_requires=requirements) # NEW

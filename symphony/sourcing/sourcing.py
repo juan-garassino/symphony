@@ -1,12 +1,12 @@
-import pathlib
-import tensorflow as tf
 import glob
-import pandas as pd
-import numpy as np
-import tensorflow as tf
-import pretty_midi
 import pathlib
+
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+
 from symphony.preproccesing.preprocessing import midi_to_notes
+
 
 def download_maestro_dataset(colab=False):
     if colab:
@@ -27,7 +27,6 @@ def download_maestro_dataset(colab=False):
 
 def load_midi_files(data_dir, num_files):
     directory = str(f'{data_dir}/**/*.mid*')
-    print(dir)
     filenames = glob.glob(directory)
     print('Number of files:', len(filenames))
 
@@ -46,9 +45,8 @@ def load_midi_files(data_dir, num_files):
 
     return tf.data.Dataset.from_tensor_slices(train_notes)
 
-import tensorflow as tf
 
-def create_sequences(dataset: tf.data.Dataset, seq_length: int, num_samples: int, vocab_size=128) -> tf.data.Dataset:
+def create_sequences(dataset: tf.data.Dataset, seq_length: int, vocab_size=128, num_samples=None) -> tf.data.Dataset:
     """Returns TF Dataset of sequence and label examples."""
     seq_length = seq_length + 1
 
@@ -74,7 +72,9 @@ def create_sequences(dataset: tf.data.Dataset, seq_length: int, num_samples: int
 
         return scale_pitch(inputs), labels
 
-    return sequences.take(num_samples).map(split_labels, num_parallel_calls=tf.data.AUTOTUNE)
+    if num_samples is not None:
+        sequences = sequences.take(num_samples)
+    return sequences.map(split_labels, num_parallel_calls=tf.data.AUTOTUNE)
 
 
 
@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     data_dir = '../../data/maestro-v2.0.0'
 
-    download_maestro_dataset(data_dir)
+    download_maestro_dataset(colab=True)
 
     data_dir = '/content/symphony/data/maestro-v2.0.0' # CHANGE THIS
 
