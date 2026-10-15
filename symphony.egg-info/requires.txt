@@ -1,8 +1,0 @@
-pretty_midi
-pandas
-numpy
-seaborn
-matplotlib
-tensorflow
-pretty_midi
-pyfluidsynth

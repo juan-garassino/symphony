@@ -1,6 +1,0 @@
-setup.py
-symphony.egg-info/PKG-INFO
-symphony.egg-info/SOURCES.txt
-symphony.egg-info/dependency_links.txt
-symphony.egg-info/requires.txt
-symphony.egg-info/top_level.txt

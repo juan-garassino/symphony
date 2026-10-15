@@ -1,16 +1,17 @@
 import argparse
 import glob
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-import matplotlib.pyplot as plt
-from tensorflow.keras import layers, Model
-import pathlib
-from symphony.model.loss.loss import mse_with_positive_pressure
-from symphony.model.generate import predict_next_note
-from symphony.sourcing.sourcing2 import load_midi_files, create_sequences
-from symphony.preproccesing.preprocessing import midi_to_notes, notes_to_midi
+from tensorflow.keras import Model, layers
+
 from symphony.manager.manager import AudioManager
+from symphony.model.generate import predict_next_note
+from symphony.model.loss.loss import mse_with_positive_pressure
+from symphony.preproccesing.preprocessing import midi_to_notes, notes_to_midi
+from symphony.sourcing.sourcing2 import create_sequences
 
 
 def parse_arguments():
@@ -178,9 +179,15 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except:
-        import ipdb, traceback, sys
+    except Exception:
+        import sys
+        import traceback
+
+        try:
+            import ipdb as debugger
+        except ImportError:
+            import pdb as debugger
 
         extype, value, tb = sys.exc_info()
         traceback.print_exc()
-        ipdb.post_mortem(tb)
+        debugger.post_mortem(tb)
